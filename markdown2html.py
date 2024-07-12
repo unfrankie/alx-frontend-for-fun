@@ -32,6 +32,8 @@ def convert_markdown_to_html(markdown_file, html_file):
         in_ul_list = False
         in_ol_list = False
         in_paragraph = False
+        paragraph_lines = []
+
         for line in lines:
             line = line.rstrip()
             line = custom_replace(line)
@@ -86,16 +88,25 @@ def convert_markdown_to_html(markdown_file, html_file):
                     if in_paragraph:
                         html.write('</p>\n')
                         in_paragraph = False
+                    if paragraph_lines:
+                        html.write('<p>\n')
+                        html.write('<br/>\n'.join(paragraph_lines))
+                        html.write('</p>\n')
+                        paragraph_lines = []
                 else:
                     if not in_paragraph:
                         html.write('<p>\n')
                         in_paragraph = True
-                    html.write(f'{line}<br/>\n')
+                    paragraph_lines.append(line)
         if in_ul_list:
             html.write('</ul>\n')
         if in_ol_list:
             html.write('</ol>\n')
         if in_paragraph:
+            html.write('</p>\n')
+        if paragraph_lines:
+            html.write('<p>\n')
+            html.write('<br/>\n'.join(paragraph_lines))
             html.write('</p>\n')
 
 
