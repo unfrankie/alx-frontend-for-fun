@@ -4,113 +4,104 @@ markdown2html.py - Converts Markdown to HTML
 """
 
 import sys
-import hashlib
+import os
 import re
+import hashlib
 
-def parse_headings(line):
-    """Parse Markdown headings to HTML"""
-    for i in range(6, 0, -1):
-        if line.startswith('#' * i):
-            return f"<h{i}>{line[i:].strip()}</h{i}>"
-    return None
+def md5(content):
+    """Returns the MD5 hash of the given content."""
+    return hashlib.md5(content.encode()).hexdigest()
 
-def parse_unordered_list(lines, index):
-    """Parse Markdown unordered list to HTML"""
-    html = ["<ul>"]
-    while index < len(lines) and lines[index].startswith('- '):
-        html.append(f"<li>{lines[index][2:]}</li>")
-        index += 1
-    html.append("</ul>")
-    return '\n'.join(html), index
-
-def parse_ordered_list(lines, index):
-    """Parse Markdown ordered list to HTML"""
-    html = ["<ol>"]
-    while index < len(lines) and lines[index].startswith('* '):
-        html.append(f"<li>{lines[index][2:]}</li>")
-        index += 1
-    html.append("</ol>")
-    return '\n'.join(html), index
-
-def parse_paragraph(lines, index):
-    """Parse Markdown paragraph to HTML"""
-    html = ["<p>"]
-    while index < len(lines) and not lines[index].startswith(('#', '-', '*')):
-        html.append(lines[index])
-        index += 1
-        if index < len(lines) and not lines[index].startswith(('#', '-', '*')):
-            html.append("<br/>")
-    html.append("</p>")
-    return '\n'.join(html), index
-
-def parse_bold_and_emphasis(line):
-    """Parse Markdown bold and emphasis to HTML"""
-    line = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', line)
-    line = re.sub(r'__(.+?)__', r'<em>\1</em>', line)
-    return line
-
-def parse_special_syntax(line):
-    """Parse special Markdown syntax to HTML"""
+def custom_replace(line):
+    """Performs custom replacements on the given line."""
     line = re.sub(r'\[\[(.+?)\]\]',
                   lambda m: hashlib.md5(m.group(1).encode()).hexdigest(), line)
     line = re.sub(r'\(\((.+?)\)\)',
                   lambda m: re.sub(r'[cC]', '', m.group(1)), line)
     return line
 
-def markdown_to_html(markdown_file, html_file):
-    """Convert Markdown file to HTML file"""
-    with open(markdown_file, 'r') as md_file:
-        lines = md_file.readlines()
+def convert_markdown_to_html(markdown_file, html_file):
+    """Converts the given Markdown file to an HTML file."""
+    with open(markdown_file, 'r') as md:
+        lines = md.readlines()
 
-    html_lines = []
-    index = 0
-    while index < len(lines):
-        line = lines[index].strip()
-        if line.startswith('#'):
-            heading = parse_headings(line)
-            if heading:
-                html_lines.append(heading)
-        elif line.startswith('- '):
-            ul_html, index = parse_unordered_list(lines, index)
-            html_lines.append(ul_html)
-            continue
-        elif line.startswith('* '):
-            ol_html, index = parse_ordered_list(lines, index)
-            html_lines.append(ol_html)
-            continue
-        else:
-            paragraph, index = parse_paragraph(lines, index)
-            html_lines.append(paragraph)
-            continue
-        index += 1
-
-    with open(html_file, 'w') as html_file:
-        for line in html_lines:
-            line = parse_bold_and_emphasis(line)
-            line = parse_special_syntax(line)
-            html_file.write(line + '\n')
+    with open(html_file, 'w') as html:
+        in_ul_list = False
+        in_ol_list = False
+        in_paragraph = False
+        for line in lines:
+            line = line.strip()
+            line = custom_replace(line)
+            line = line.replace('**', '<b>').replace('__', '<em>')
+            line = line.replace('<b>', '</b>', 1).replace('<em>', '</em>', 1)
+            if line.startswith('#'):
+                if in_ul_list:
+                    html.write('</ul>\n')
+                    in_ul_list = False
+                if in_ol_list:
+                    html.write('</ol>\n')
+                    in_ol_list = False
+                if in_paragraph:
+                    html.write('</p>\n')
+                    in_paragraph = False
+                level = len(line.split(' ')[0])
+                content = ' '.join(line.split(' ')[1:])
+                html.write(f'<h{level}>{content}</h{level}>\n')
+            elif line.startswith('-'):
+                if in_ol_list:
+                    html.write('</ol>\n')
+                    in_ol_list = False
+                if not in_ul_list:
+                    if in_paragraph:
+                        html.write('</p>\n')
+                        in_paragraph = False
+                    html.write('<ul>\n')
+                    in_ul_list = True
+                content = line[1:].strip()
+                html.write(f'<li>{content}</li>\n')
+            elif line.startswith('*'):
+                if in_ul_list:
+                    html.write('</ul>\n')
+                    in_ul_list = False
+                if not in_ol_list:
+                    if in_paragraph:
+                        html.write('</p>\n')
+                        in_paragraph = False
+                    html.write('<ol>\n')
+                    in_ol_list = True
+                content = line[1:].strip()
+                html.write(f'<li>{content}</li>\n')
+            else:
+                if in_ul_list:
+                    html.write('</ul>\n')
+                    in_ul_list = False
+                if in_ol_list:
+                    html.write('</ol>\n')
+                    in_ol_list = False
+                if line == '':
+                    if in_paragraph:
+                        html.write('</p>\n')
+                        in_paragraph = False
+                else:
+                    if not in_paragraph:
+                        html.write('<p>\n')
+                        in_paragraph = True
+                    html.write(f'{line}<br/>\n')
+        if in_ul_list:
+            html.write('</ul>\n')
+        if in_ol_list:
+            html.write('</ol>\n')
+        if in_paragraph:
+            html.write('</p>\n')
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: ./markdown2html.py README.md README.html",
-              file=sys.stderr)
-        sys.exit(1)
-
+        print("Usage: ./markdown2html.py README.md README.html", file=sys.stderr)
+        exit(1)
     markdown_file = sys.argv[1]
     html_file = sys.argv[2]
-
-    if not markdown_file or not html_file:
-        print("Usage: ./markdown2html.py README.md README.html",
-              file=sys.stderr)
-        sys.exit(1)
-
-    if not markdown_file.endswith('.md'):
+    if not os.path.exists(markdown_file):
         print(f"Missing {markdown_file}", file=sys.stderr)
-        sys.exit(1)
-
-    try:
-        with open(markdown_file, 'r'):
-            markdown_to_html(markdown_file, html_file)
-    except FileNotFoundError:
-        print(f"Missing {markdown_file}", file=sys.stderr)
-        sys.exit(1)
+        exit(1)
+    convert_markdown_to_html(markdown_file, html_file)
+    exit(0)
