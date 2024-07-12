@@ -33,10 +33,11 @@ def convert_markdown_to_html(markdown_file, html_file):
         in_ol_list = False
         in_paragraph = False
         for line in lines:
-            line = line.strip()
+            line = line.rstrip()
             line = custom_replace(line)
-            line = line.replace('**', '<b>').replace('__', '<em>')
-            line = line.replace('<b>', '</b>', 1).replace('<em>', '</em>', 1)
+            line = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', line)
+            line = re.sub(r'__(.+?)__', r'<em>\1</em>', line)
+
             if line.startswith('#'):
                 if in_ul_list:
                     html.write('</ul>\n')
