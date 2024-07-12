@@ -8,9 +8,11 @@ import os
 import re
 import hashlib
 
+
 def md5(content):
     """Returns the MD5 hash of the given content."""
     return hashlib.md5(content.encode()).hexdigest()
+
 
 def custom_replace(line):
     """Performs custom replacements on the given line."""
@@ -19,6 +21,7 @@ def custom_replace(line):
     line = re.sub(r'\(\((.+?)\)\)',
                   lambda m: re.sub(r'[cC]', '', m.group(1)), line)
     return line
+
 
 def convert_markdown_to_html(markdown_file, html_file):
     """Converts the given Markdown file to an HTML file."""
@@ -94,9 +97,11 @@ def convert_markdown_to_html(markdown_file, html_file):
         if in_paragraph:
             html.write('</p>\n')
 
+
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: ./markdown2html.py README.md README.html", file=sys.stderr)
+        print("Usage: ./markdown2html.py README.md README.html",
+              file=sys.stderr)
         exit(1)
     markdown_file = sys.argv[1]
     html_file = sys.argv[2]
