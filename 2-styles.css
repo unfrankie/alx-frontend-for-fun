@@ -1,0 +1,64 @@
+/* Toggle label styling */
+.toggle-label {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 20px;
+    background-color: #ebebeb;
+    border-radius: 20px;
+    border: 1px solid lightgray;
+    transition: background-color 0.3s;
+}
+
+/* Toggle switch styling */
+.toggle-label::after {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: white;
+    top: -4px;
+    left: -1px;
+    border: 1px solid lightgray;
+    transition: left 0.3s;
+}
+
+/* Toggle inner text styling */
+.toggle-inner {
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 6px;
+    height: 100%;
+    align-items: center;
+}
+
+.toggle-inner::before {
+    content: "Yes";
+    color: white;
+}
+
+.toggle-inner::after {
+    content: "No";
+    color: #c3c3c3;
+}
+
+/* Hide default checkbox */
+.toggle-cb {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    position: absolute;
+    opacity: 0;
+}
+
+/* Checked state styling */
+.toggle-cb:checked + .toggle-label {
+    background-color: #d73953;
+}
+
+.toggle-cb:checked + .toggle-label::after {
+    left: 33px;
+}
