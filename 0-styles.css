@@ -1,0 +1,43 @@
+/* General styling for the unordered list */
+ul {
+    display: flex;
+    justify-content: center;
+    padding: 0;
+}
+
+/* Styling for list items */
+li {
+    background-color: #f7f7f7;
+    list-style: none;
+    text-align: center;
+    border: 2px solid gray;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    margin: 1rem;
+    padding: 10px 0;
+    font-size: 2rem;
+    width: 300px;
+}
+
+/* Styling for the icon class */
+.icon {
+    display: inline-block;
+    background-image: url("./0-sprite.png");
+    background-repeat: no-repeat;
+    height: 400px;
+    width: 300px;
+}
+
+/* Specific background positions for different icons */
+.icon.i-html {
+    background-position: left center;
+}
+
+.icon.i-css {
+    background-position: center;
+}
+
+.icon.i-js {
+    background-position: right center;
+}
